@@ -8,6 +8,7 @@ include("types.jl")
 include("macro.jl")
 include("operations.jl")
 include("promote.jl")
+include("prettyprinting.jl")
 
 
 

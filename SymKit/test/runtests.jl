@@ -3,8 +3,7 @@ using Test
 
 
 @testset "Simple Operations" begin
-    x = @sym x 
-    y = @sym y 
+    x, y = @sym x y
 
     expr = x + y 
     @test expr isa BinaryOp
