@@ -22,6 +22,28 @@ function simplify_unary(expr::UnaryOp)
         return arg.arg
     end
 
+    # Constant simplification for sqrt: sqrt(4) = 2
+    if expr.op == :sqrt && arg isa Const && arg.value >= 0
+        return Const(sqrt(arg.value))
+    end
+
+    # sqrt(x^2) = abs(x)
+    if expr.op == :sqrt && arg isa BinaryOp && arg.op == :^
+        if arg.right isa Const && arg.right.value == 2
+            return UnaryOp(:abs, arg.left)
+        end
+    end
+
+    # Constant simplification for abs: abs(-5) = 5
+    if expr.op == :abs && arg isa Const
+        return Const(abs(arg.value))
+    end
+
+    # abs(-x) = abs(x)
+    if expr.op == :abs && arg isa UnaryOp && arg.op == :-
+        return UnaryOp(:abs, arg.arg)
+    end
+
     return UnaryOp(expr.op, arg)
 end
 

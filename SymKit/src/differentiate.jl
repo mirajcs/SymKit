@@ -1,5 +1,5 @@
-# Basic differentiation
-Derivative(expr::SymExpr, var::Sym) = diff_impl(expr, var)
+# Basic differentiation (with automatic simplification)
+Derivative(expr::SymExpr, var::Sym) = Simplify(diff_impl(expr, var))
 Derivative(expr::SymExpr, var::Symbol) = Derivative(expr, Sym(var))
 
 # Convenience methods for plain numbers
@@ -31,6 +31,12 @@ end
 function diff_impl(u::UnaryOp, var::Sym)
     if u.op == :-
         -diff_impl(u.arg, var)
+    elseif u.op == :sqrt
+        # d/dx(√f) = f' / (2√f)
+        diff_impl(u.arg, var) / (Const(2) * UnaryOp(:sqrt, u.arg))
+    elseif u.op == :abs
+        # d/dx(|f|) = f' * f / |f| = f' * sgn(f)
+        diff_impl(u.arg, var) * u.arg / UnaryOp(:abs, u.arg)
     else
         error("Unknown unary operator: $(u.op)")
     end

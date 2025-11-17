@@ -48,26 +48,27 @@ end
     @test Derivative(y, x) == Const(0)
     @test Derivative(x, y) == Const(0)
 
-    # Test addition rule
-    @test Derivative(x + y, x) == Const(1) + Const(0)
-    @test Derivative(x + x, x) == Const(1) + Const(1)
+    # Test addition rule (simplified)
+    @test Derivative(x + y, x) == Const(1)
+    @test Derivative(x + x, x) == Const(2)  # x+x simplifies to 2x, d/dx(2x) = 2
 
-    # Test subtraction rule
-    @test Derivative(x - y, x) == Const(1) - Const(0)
-    @test Derivative(x - x, x) == Const(1) - Const(1)
+    # Test subtraction rule (simplified)
+    @test Derivative(x - y, x) == Const(1)
+    @test Derivative(x - x, x) == Const(0)
 
-    # Test product rule: d/dx(x*y) = 1*y + x*0
-    @test Derivative(x * y, x) == (Const(1) * y + x * Const(0))
-    @test Derivative(x * x, x) == (Const(1) * x + x * Const(1))
+    # Test product rule: d/dx(x*y) simplified = y
+    @test Derivative(x * y, x) == y
+    # d/dx(x*x) simplified = 2*x
+    @test Derivative(x * x, x) == Const(2) * x
 
-    # Test power rule: d/dx(x^2) = 2*x^(2-1)*1 = 2*x^1*1
-    expr_power = x ^ Const(2)
-    result_power = Derivative(expr_power, x)
-    @test result_power == (Const(2) * (x ^ (Const(2) - Const(1))) * Const(1))
+    # Test power rule: d/dx(x^2) simplified = 2*x
+    @test Derivative(x ^ Const(2), x) == Const(2) * x
+    # d/dx(x^3) simplified = 3*x^2
+    @test Derivative(x ^ Const(3), x) == Const(3) * (x ^ Const(2))
 
     # Test negation in differentiation
     @test Derivative(-x, x) == -(Const(1))
-    @test Derivative(-(x + y), x) == -(Const(1) + Const(0))
+    @test Derivative(-(x + y), x) == -(Const(1))
 end
 
 @testset "Arithmetic Operations" begin
@@ -176,4 +177,75 @@ end
     # Test that non-perfect squares aren't simplified
     result = Simplify((x ^ Const(2)) + x * y + (y ^ Const(2)))
     @test !(result isa BinaryOp && result.op == :^ && result.right == Const(2))
+end
+
+@testset "Square Root" begin
+    @sym x
+
+    # Test sqrt creation with symbolic variable
+    @test sqrt(x) isa UnaryOp
+    @test sqrt(x).op == :sqrt
+
+    # Test sqrt with Const
+    @test sqrt(Const(4)) isa UnaryOp
+    @test sqrt(Const(4)).op == :sqrt
+
+    # Test constant folding: sqrt(4) = 2
+    @test Simplify(sqrt(Const(4))).value == 2.0
+    @test Simplify(sqrt(Const(9))).value == 3.0
+    @test Simplify(sqrt(Const(16))).value == 4.0
+
+    # Test sqrt with zero
+    @test Simplify(sqrt(Const(0))).value == 0.0
+
+    # Test sqrt with one
+    @test Simplify(sqrt(Const(1))).value == 1.0
+
+    # Test differentiation: d/dx(√x) = 1/(2√x)
+    deriv = Derivative(sqrt(x), x)
+    @test deriv isa BinaryOp  # Should be 1 / (2*sqrt(x))
+    @test deriv.op == :/
+
+    # Test differentiation of sqrt with expression: d/dx(√(x+1)) = 1/(2√(x+1))
+    deriv2 = Derivative(sqrt(x + Const(1)), x)
+    @test deriv2 isa BinaryOp
+    @test deriv2.op == :/
+end
+
+@testset "Absolute Value" begin
+    @sym x
+
+    # Test abs creation
+    @test abs(x) isa UnaryOp
+    @test abs(x).op == :abs
+
+    # Test abs with Const
+    @test abs(Const(-5)) isa UnaryOp
+    @test abs(Const(-5)).op == :abs
+
+    # Test constant folding: abs(-5) = 5
+    @test Simplify(abs(Const(-5))).value == 5.0
+    @test Simplify(abs(Const(3))).value == 3.0
+    @test Simplify(abs(Const(0))).value == 0.0
+
+    # Test abs(-x) = abs(x)
+    result = Simplify(abs(-x))
+    @test result isa UnaryOp
+    @test result.op == :abs
+    @test result.arg == x
+
+    # Test sqrt(x^2) = abs(x)
+    result = Simplify(sqrt(x ^ Const(2)))
+    @test result isa UnaryOp
+    @test result.op == :abs
+    @test result.arg == x
+
+    # Test sqrt with constant squared: sqrt(4^2) fully simplifies to 4
+    result = Simplify(sqrt(Const(4) ^ Const(2)))
+    @test result.value == 4.0  # Fully simplified
+
+    # Test differentiation: d/dx(|x|) = x/|x|
+    deriv = Derivative(abs(x), x)
+    @test deriv isa BinaryOp
+    @test deriv.op == :/
 end
