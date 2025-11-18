@@ -1,5 +1,5 @@
 name = "SymKit"
-uuid = "12345678-1234-1234-1234-123456789abc"  # Replace with your actual UUID
+uuid = "f132d77b-927f-46c4-aa14-355bec289a16"  
 authors = ["Miraj Samarakkody <miraj.samarakkody@gmail.com>"]
 version = "0.1.0"
 
