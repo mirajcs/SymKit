@@ -44,20 +44,10 @@ the result. Supports basic operations (+, -, *, /, ^) and unary operations (-, s
 """
 Derivative(expr::SymExpr, var::Sym) = Simplify(diff_impl(expr, var))
 
-"""
-    Derivative(expr::SymExpr, var::Symbol)
 
-Convenience method that accepts Symbol instead of Sym for the variable.
-"""
 Derivative(expr::SymExpr, var::Symbol) = Derivative(expr, Sym(var))
 
-"""
-    Derivative(expr::Number, var::Sym)
-    Derivative(expr::Number, var::Symbol)
 
-Convenience methods that accept plain numbers and automatically wrap them in Const.
-The derivative of any constant is zero.
-"""
 Derivative(expr::Number, var::Sym) = Derivative(Const(expr), var)
 Derivative(expr::Number, var::Symbol) = Derivative(Const(expr), var)
 
