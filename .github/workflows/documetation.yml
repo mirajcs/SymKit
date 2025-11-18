@@ -21,6 +21,13 @@ jobs:
         with:
           version: '1'
       
+      # Do NOT use julia-actions/cache - it's causing the issue
+      
+      - name: Force clean state
+        run: |
+          rm -rf ~/.julia
+          rm -f Manifest.toml docs/Manifest.toml
+      
       - name: Install dependencies
         run: |
           julia --project=docs/ -e '
@@ -28,8 +35,6 @@ jobs:
             Pkg.develop(PackageSpec(path=pwd()))
             Pkg.instantiate()
           '
-        env:
-          JULIA_PKG_PRECOMPILE_AUTO: 0
       
       - name: Build and deploy
         env:
